@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BD Daily Tracker</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef2f3;--panel:#fff;--ink:#14232b;--mute:#5d6f78;--line:#d3dde1;--accent:#0f5c6e;--accent-ink:#fff;--warn:#b4531a;--ok:#2f7d4f;--hl:#fff3d6}
+:root[data-theme="dark"]{--bg:#0f1a1f;--panel:#17262d;--ink:#e6eef1;--mute:#93a7b0;--line:#2b414b;--accent:#5cc0d6;--accent-ink:#06222a;--warn:#f0a56a;--ok:#6fcf97;--hl:#33290f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1f;--panel:#17262d;--ink:#e6eef1;--mute:#93a7b0;--line:#2b414b;--accent:#5cc0d6;--accent-ink:#06222a;--warn:#f0a56a;--ok:#6fcf97;--hl:#33290f}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+h1{font:700 26px/1.2 Georgia,"Times New Roman",serif;margin:0}
+h2{font:700 18px/1.3 Georgia,serif;margin:0 0 8px}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.sub{color:var(--mute);margin:2px 0 0;font-size:14px}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.f{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin:12px 0}
+.tabs{display:flex;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;z-index:5}
+.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;font:600 15px inherit;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg{display:flex;gap:0;margin:10px 0 0}
+.seg button{flex:1;padding:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);font:600 14px inherit;cursor:pointer}
+.seg button:first-child{border-radius:6px 0 0 6px}.seg button:last-child{border-radius:0 6px 6px 0;border-left:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.blk{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.blk:first-child{border-top:0}
+.blk input[type=checkbox]{width:22px;height:22px;margin-top:3px;flex:none;accent-color:var(--accent)}
+.blk.done .t{text-decoration:line-through;color:var(--mute)}
+.blk.now{background:var(--hl);margin:0 -14px;padding:10px 14px;border-radius:6px}
+.tm{font-size:13px;color:var(--mute)}
+.t{font-weight:600}
+.o{font-size:14px;color:var(--mute)}
+.btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.b{padding:6px 10px;border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:6px;font:600 13px inherit;cursor:pointer}
+.b.solid{background:var(--accent);color:var(--accent-ink)}
+.b.danger{border-color:var(--warn);color:var(--warn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.grid label{font-size:13px;color:var(--mute);display:block;margin-bottom:2px}
+.grid small{color:var(--mute)}
+.read{border-left:4px solid var(--warn);padding:8px 12px;background:var(--hl);border-radius:0 6px 6px 0;margin-top:10px;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:6px 4px;text-align:right;border-top:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:600;border-top:0}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.hide{display:none}
+.lead{border-top:1px solid var(--line);padding:10px 0}
+.lead:first-child{border-top:0}
+.lead.due{background:var(--hl);margin:0 -14px;padding:10px 14px;border-radius:6px}
+.lead .nm{font-weight:600}
+.pill{display:inline-block;font:700 12px inherit;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mute);margin-left:6px}
+.pill.A{border-color:var(--ok);color:var(--ok)}.pill.B{border-color:var(--warn);color:var(--warn)}
+.lead .row{margin-top:6px;align-items:end}
+#toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:6px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.bar i,#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>BD Daily Tracker</h1>
+      <p class="sub" id="dateLine"></p>
+    </div>
+    <div style="width:170px"><label class="f" for="day" style="margin-top:0">Day</label><input type="date" id="day"></div>
+  </div>
+
+  <div class="seg" role="group" aria-label="Routine">
+    <button id="mSN" aria-pressed="true">Sales Nav &middot; 90 min</button>
+    <button id="mFull" aria-pressed="false">Full day</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabDay" aria-selected="true" aria-controls="pDay">Today's plan</button>
+    <button role="tab" id="tabNight" aria-selected="false" aria-controls="pNight">Tonight's review</button>
+    <button role="tab" id="tabLeads" aria-selected="false" aria-controls="pLeads">Leads</button>
+  </div>
+
+  <section id="pDay" role="tabpanel">
+    <div class="card">
+      <label class="f" for="theme" style="margin-top:0">Theme for the day</label>
+      <input id="theme" placeholder="e.g. ICP1 hiring-dev accounts (KSA/UAE)">
+      <label class="f" for="o1">Top three outcomes</label>
+      <input id="o1" placeholder="Outcome 1" aria-label="Outcome 1">
+      <input id="o2" placeholder="Outcome 2" aria-label="Outcome 2" style="margin-top:6px">
+      <input id="o3" placeholder="Outcome 3" aria-label="Outcome 3" style="margin-top:6px">
+      <label class="f" for="meet">Meetings today</label>
+      <input id="meet" placeholder="none, or name + time">
+      <div class="btns"><button class="b solid" id="ctxBtn">Copy Copilot opening prompt</button></div>
+    </div>
+    <div class="card">
+      <h2>Blocks <span id="pct" class="tm"></span></h2>
+      <div class="read" id="due" style="margin:0 0 6px"></div>
+      <div class="bar"><i id="fill"></i></div>
+      <div id="blocks" style="margin-top:6px"></div>
+    </div>
+  </section>
+
+  <section id="pNight" role="tabpanel" class="hide">
+    <div class="card">
+      <h2>1. Count what moved</h2>
+      <p class="sub" style="margin-bottom:10px">Fill from the tracker, not from memory. Leave blank if not recorded.</p>
+      <div class="grid" id="metrics"></div>
+      <div class="read" id="read">Enter numbers to see your weakest stage.</div>
+      <div class="btns"><button class="b" id="dashBtn">Copy numbers as Copilot prompt</button></div>
+    </div>
+    <div class="card">
+      <h2>Rates: today vs all-time</h2>
+      <p class="sub" style="margin-bottom:6px">All-time covers every day saved on this device. Rates under 20 in the denominator are flagged as small samples.</p>
+      <div style="overflow-x:auto"><table id="rates"></table></div>
+    </div>
+    <div class="card">
+      <h2>2. Director audit</h2>
+      <label class="f" for="a1" style="margin-top:0">What moved a deal forward today?</label>
+      <textarea id="a1"></textarea>
+      <label class="f" for="a2">What was only activity, with no movement?</label>
+      <textarea id="a2"></textarea>
+      <div class="row">
+        <div><label class="f" for="stop">Stop</label><textarea id="stop"></textarea></div>
+        <div><label class="f" for="rep">Repeat</label><textarea id="rep"></textarea></div>
+        <div><label class="f" for="auto">Automate</label><textarea id="auto"></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Nightly assessment inputs</h2>
+      <label class="f" for="bo" style="margin-top:0">Best opportunity today</label>
+      <textarea id="bo"></textarea>
+      <label class="f" for="sd">What prospects actually said</label>
+      <textarea id="sd"></textarea>
+      <label class="f" for="wm">Which message got a reply</label>
+      <textarea id="wm"></textarea>
+      <div class="row">
+        <div><label class="f" for="ob">Most frequent objection</label><textarea id="ob"></textarea></div>
+        <div><label class="f" for="bk">What blocked me</label><textarea id="bk"></textarea></div>
+      </div>
+      <label class="f" for="cm">Measurable commitment for tomorrow</label>
+      <input id="cm" placeholder="e.g. 8 requests sent to A-leads by 11:00">
+      <div class="btns"><button class="b solid" id="nightBtn">Copy nightly report for Claude</button></div>
+    </div>
+    <div class="card">
+      <h2>3. Tomorrow's five actions</h2>
+      <p class="sub">The first three double as your top 3 prospects or actions.</p>
+      <div id="tm"></div>
+      <div class="btns"><button class="b solid" id="carry">Carry these to tomorrow's outcomes</button></div>
+    </div>
+    <div class="card">
+      <h2>Last 7 days</h2>
+      <div style="overflow-x:auto"><table id="hist"></table></div>
+      <div class="btns"><button class="b" id="exportBtn">Copy week summary</button></div>
+    </div>
+  </section>
+
+  <section id="pLeads" role="tabpanel" class="hide">
+    <div class="card">
+      <h2>Add a lead</h2>
+      <p class="sub">Only log a lead once you can name a verified signal and its source. No signal caps the grade at B.</p>
+      <div class="row"><div><label class="f" for="l_name">Name</label><input id="l_name"></div><div><label class="f" for="l_co">Company</label><input id="l_co"></div></div>
+      <div class="row"><div><label class="f" for="l_title">Job title</label><input id="l_title"></div><div><label class="f" for="l_cty">Country</label><input id="l_cty"></div></div>
+      <div class="row"><div><label class="f" for="l_url">LinkedIn URL</label><input id="l_url"></div><div><label class="f" for="l_site">Website</label><input id="l_site"></div></div>
+      <div class="row">
+        <div><label class="f" for="l_icp">ICP</label><select id="l_icp"><option>ICP1 hiring devs</option><option>ICP2 automation</option><option>Agency / outsourcer</option></select></div>
+        <div><label class="f" for="l_svc">Service line</label><select id="l_svc"><option>Software development</option><option>AI automation</option></select></div>
+      </div>
+      <label class="f" for="l_sig">Verified buying signal</label>
+      <input id="l_sig" placeholder="e.g. hiring a React developer">
+      <label class="f" for="l_src">Evidence source</label>
+      <input id="l_src" placeholder="job post URL, own post, site check">
+      <div class="row">
+        <div><label class="f" for="l_score">Score (0-100)</label><input id="l_score" type="number" min="0" max="100" inputmode="numeric"></div>
+        <div><label class="f" for="l_val">Est. deal value (PKR)</label><input id="l_val" type="number" min="0" inputmode="numeric"></div>
+      </div>
+      <label class="f" for="l_next">Next action</label>
+      <input id="l_next" placeholder="send connection note referencing the job post">
+      <div class="row">
+        <div><label class="f" for="l_fu">Follow-up date</label><input id="l_fu" type="date"></div>
+        <div><label class="f" for="l_note">Notes</label><input id="l_note"></div>
+      </div>
+      <div class="btns"><button class="b solid" id="addLead">Save lead</button></div>
+    </div>
+    <div class="card">
+      <h2>Pipeline <span class="tm" id="lcount"></span></h2>
+      <div id="leadList"></div>
+      <div class="btns"><button class="b" id="csvBtn">Copy as CSV (spreadsheet-ready)</button></div>
+    </div>
+  </section>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+var BLOCKS_FULL=[
+["08:30","Open the control room","Notes file with date, theme, 3 outcomes; new replies logged"],
+["08:45","Activate the Copilot","Master prompt and today's context pasted; rules confirmed"],
+["09:00","Existing pipeline review","Three priority records, each with a specific action"],
+["09:30","Target account research","Five research cards, records at RESEARCHED"],
+["10:15","Prospect research","Ten compact cards; poor fits removed"],
+["11:00","Qualification (PAIRT)","About six prospects at QUALIFIED"],
+["11:30","Personalized outreach","Six messages sent; follow-up dates set"],
+["12:15","Follow-up blitz","Eight follow-ups sent; touch numbers updated"],
+["12:30","Create one BD asset","One reusable asset saved, proof points added"],
+["13:00","Break","Rest. Write the first 14:00 task on a sticky note"],
+["14:00","Service agency client hunt","Three prospects with signal, hypothesis, contact"],
+["14:30","Institutional partnership hour","Two institutions advanced; one message sent"],
+["15:15","Meeting preparation","A brief for every meeting in the next 48 hours"],
+["15:45","Proposal / deal work","Draft proposal or follow-up with a commercial ask"],
+["16:30","Daily dashboard","Counts entered in Tonight's review"],
+["17:00","End-of-day audit","Stop, repeat, automate written"],
+["17:20","Pipeline update","Every active record has stage, next action, date"],
+["17:40","Build tomorrow","Five actions scheduled with times"]];
+var BLOCKS_SN=[
+["0:00","Pipeline review (10 min)","Due follow-ups and open replies listed; Leads tab checked; today's priorities set"],
+["0:10","Lead research (35 min)","Run the saved search; about 12 accounts checked; signal and source recorded; each scored"],
+["0:45","Outreach (30 min)","About 8 personalized notes to A-leads, no pitch; 3 thoughtful comments on prospect posts"],
+["1:15","Opportunity development (10 min)","Reply to engaged prospects; one discovery question or call offer each"],
+["1:25","CRM and report (5 min)","Leads logged with next action and date; counts entered; top 3 for tomorrow set"]];
+var METRICS=[["res","New accounts / leads researched"],["qual","Qualified leads added"],["ahi","A-leads identified (75+)"],["dm","Decision-makers identified"],["reqs","Connection requests sent"],["acc","Connections accepted"],["first","First messages sent"],["fu","Follow-ups"],["rep","Replies"],["pos","Positive replies"],["opps","Qualified opportunities"],["mb","Meetings / calls booked"],["mh","Meetings / calls held"],["prop","Proposals sent"],["neg","Negotiations active"],["won","Projects won"],["val","Pipeline value (PKR)"],["rev","Closed revenue (PKR)"]];
+var FUNNEL=[["res","qual","research to qualified"],["reqs","acc","request to accepted"],["qual","first","qualified to first contact"],["first","rep","contact to reply"],["rep","mb","reply to meeting booked"],["mb","prop","meeting to proposal"]];
+var RATES=[["Connection acceptance","acc","reqs"],["Reply rate","rep","first"],["Positive reply rate","pos","rep"],["Qualified opportunity rate","opps","rep"],["Meeting booking rate","mb","rep"],["Proposal-to-win","won","prop"]];
+var THEMES_FULL={5:"Strategic partnerships (Pipeline C)",6:"Proposals + CRM + reporting"};
+var THEMES_SN={1:"ICP1 hiring-dev accounts (KSA/UAE)",2:"ICP1 hiring-dev accounts (UK/USA)",3:"ICP2 automation leads",4:"Follow-ups + discovery calls",5:"Weekly review + agency side test"};
+var STAGES=["New","Researched","Qualified","Contacted","Engaged","Discovery","Proposal","Negotiation","Won","Lost","Nurture"];
+var FIELDS=["theme","o1","o2","o3","meet","a1","a2","stop","rep","auto","t1","t2","t3","t4","t5","bo","sd","wm","ob","bk","cm"];
+var $=function(i){return document.getElementById(i)};
+var mem={},lmem=[];
+function ld(){try{return JSON.parse(localStorage.getItem("bdtracker")||"{}")}catch(e){return mem}}
+function sv(d){try{localStorage.setItem("bdtracker",JSON.stringify(d))}catch(e){mem=d}}
+function ll(){try{return JSON.parse(localStorage.getItem("bdleads")||"[]")}catch(e){return lmem}}
+function ls(a){try{localStorage.setItem("bdleads",JSON.stringify(a))}catch(e){lmem=a}}
+function gm(){try{return localStorage.getItem("bdmode")||"sn"}catch(e){return "sn"}}
+function sm(m){try{localStorage.setItem("bdmode",m)}catch(e){}}
+var db=ld(),leads=ll(),cur="",mode=gm();
+function B(){return mode==="sn"?BLOCKS_SN:BLOCKS_FULL}
+function dn(r){var k=mode==="sn"?"doneS":"done";if(!r[k])r[k]={};return r[k]}
+function today(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
+function rec(){if(!db[cur])db[cur]={done:{},doneS:{},f:{},m:{}};return db[cur]}
+function toast(t){var e=$("toast");e.textContent=t;e.className="on";setTimeout(function(){e.className=""},1600)}
+function copy(t){try{navigator.clipboard.writeText(t).then(function(){toast("Copied")},function(){toast("Copy blocked: select text manually")})}catch(e){toast("Copy not available")}}
+function dl(){var d=new Date(cur+"T12:00:00");return d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+function build(){
+  var m="";METRICS.forEach(function(x){m+='<div><label for="m_'+x[0]+'">'+x[1]+'</label><input type="number" min="0" inputmode="numeric" id="m_'+x[0]+'"></div>'});
+  $("metrics").innerHTML=m;
+  METRICS.forEach(function(x){$("m_"+x[0]).oninput=function(){rec().m[x[0]]=this.value;sv(db);read();rates();hist()}});
+  var t="";for(var i=1;i<=5;i++)t+='<input id="t'+i+'" placeholder="Action '+i+': what, which deal, what done looks like" aria-label="Tomorrow action '+i+'" style="margin-bottom:6px">';
+  $("tm").innerHTML=t;
+  FIELDS.forEach(function(id){$(id).oninput=function(){rec().f[id]=this.value;sv(db)}});
+}
+function buildBlocks(){
+  var h="";
+  B().forEach(function(b,i){h+='<div class="blk" id="b'+i+'"><input type="checkbox" id="c'+i+'" aria-label="Done: '+b[1]+'"><div><div class="tm">'+b[0]+'</div><label for="c'+i+'" class="t">'+b[1]+'</label><div class="o">'+b[2]+'</div></div></div>'});
+  $("blocks").innerHTML=h;
+  B().forEach(function(b,i){$("c"+i).onchange=function(){dn(rec())[i]=this.checked;sv(db);paint()}});
+}
+function setMode(m){mode=m;sm(m);$("mSN").setAttribute("aria-pressed",m==="sn");$("mFull").setAttribute("aria-pressed",m!=="sn");load()}
+function load(){
+  var r=rec();
+  $("dateLine").textContent=dl();
+  $("day").value=cur;
+  FIELDS.forEach(function(id){$(id).value=r.f[id]||""});
+  var T=mode==="sn"?THEMES_SN:THEMES_FULL;
+  if(!r.f.theme){var w=new Date(cur+"T12:00:00").getDay();if(T[w])$("theme").value=T[w]}
+  METRICS.forEach(function(x){$("m_"+x[0]).value=r.m[x[0]]||""});
+  buildBlocks();
+  B().forEach(function(b,i){$("c"+i).checked=!!dn(r)[i]});
+  paint();read();rates();hist();dueBox();leadList();
+}
+function paint(){
+  var r=rec(),d0=dn(r),n=0,now=new Date(),mins=now.getHours()*60+now.getMinutes(),isToday=cur===today(),L=B();
+  L.forEach(function(b,i){var el=$("b"+i),d=!!d0[i];if(d)n++;el.className="blk"+(d?" done":"")});
+  if(isToday&&mode!=="sn"){for(var i=L.length-1;i>=0;i--){var p=L[i][0].split(":");if(+p[0]*60+ +p[1]<=mins){if(!d0[i])$("b"+i).className+=" now";break}}}
+  var pc=Math.round(n/L.length*100);$("fill").style.width=pc+"%";$("pct").textContent="· "+n+" of "+L.length+" done ("+pc+"%)";
+}
+function nums(r){var o={};METRICS.forEach(function(x){o[x[0]]=parseFloat(r.m&&r.m[x[0]])||0});return o}
+function read(){
+  var n=nums(rec()),any=0;for(var k in n)any+=n[k];
+  if(!any){$("read").textContent="Enter numbers to see your weakest stage.";return}
+  var worst=null,wr=2;
+  FUNNEL.forEach(function(f){if(n[f[0]]>0){var r=n[f[1]]/n[f[0]];if(r<wr){wr=r;worst=f}}});
+  var msg=worst?"Weakest stage today: "+worst[2]+" ("+n[worst[1]]+" of "+n[worst[0]]+"). ":"";
+  msg+=n.rep===0&&n.first>0?"Activity without replies: fix the message or the target, not the volume.":"Check that each count has a record behind it.";
+  $("read").textContent=msg;
+}
+function pct(a,b){return b>0?Math.round(a/b*100)+"% ("+a+"/"+b+")":"–"}
+function rates(){
+  var td=nums(rec()),all={};METRICS.forEach(function(x){all[x[0]]=0});
+  Object.keys(db).forEach(function(k){var n=nums(db[k]);for(var i in n)all[i]+=n[i]});
+  var h="<tr><th>Rate</th><th>Today</th><th>All-time</th></tr>";
+  RATES.forEach(function(x){var small=all[x[2]]>0&&all[x[2]]<20?" · small sample":"";
+    h+="<tr><td>"+x[0]+"</td><td>"+pct(td[x[1]],td[x[2]])+"</td><td>"+pct(all[x[1]],all[x[2]])+small+"</td></tr>"});
+  h+="<tr><td>Closed revenue (PKR)</td><td>"+td.rev+"</td><td>"+all.rev+"</td></tr>";
+  $("rates").innerHTML=h;
+}
+function hist(){
+  var ks=Object.keys(db).sort().slice(-7).reverse(),h="<tr><th>Day</th><th>Blocks</th><th>Reqs</th><th>Contacts</th><th>Replies</th><th>Mtgs</th><th>Props</th></tr>";
+  ks.forEach(function(k){var r=db[k],n=nums(r),d=0,dd=mode==="sn"?(r.doneS||{}):(r.done||{});for(var i in dd)if(dd[i])d++;
+    if(!d&&!n.first&&!n.rep&&!n.reqs)return;
+    h+="<tr><td>"+k.slice(5)+"</td><td>"+d+"/"+B().length+"</td><td>"+n.reqs+"</td><td>"+(n.first+n.fu)+"</td><td>"+n.rep+"</td><td>"+n.mh+"</td><td>"+n.prop+"</td></tr>"});
+  $("hist").innerHTML=h;
+}
+
+/* ---------- Leads ---------- */
+function grade(l){var s=parseFloat(l.score)||0;var g=s>=75?"A":s>=55?"B":"C";if(g==="A"&&(!l.sig||!l.src))g="B";return g}
+function dueList(){var t=today();return leads.filter(function(l){return l.fu&&l.fu<=t&&l.stage!=="Won"&&l.stage!=="Lost"})}
+function dueBox(){
+  var d=dueList();
+  $("due").textContent=d.length?"Follow-ups due: "+d.length+" ("+d.slice(0,3).map(function(l){return l.name||l.co}).join(", ")+(d.length>3?"…":"")+"). Open the Leads tab.":"No follow-ups due. Pipeline review starts from replies and new research.";
+}
+function leadList(){
+  var a=leads.slice().sort(function(x,y){var fx=x.fu||"9999",fy=y.fu||"9999";return fx<fy?-1:fx>fy?1:0}),t=today(),h="";
+  a.forEach(function(l){
+    var isDue=l.fu&&l.fu<=t&&l.stage!=="Won"&&l.stage!=="Lost",g=grade(l);
+    var opts=STAGES.map(function(s){return'<option'+(s===l.stage?" selected":"")+'>'+s+'</option>'}).join("");
+    h+='<div class="lead'+(isDue?" due":"")+'"><div class="nm">'+esc(l.name||"(no name)")+' · '+esc(l.co)+'<span class="pill '+g+'">'+g+(l.score?" "+esc(l.score):"")+'</span></div>'
+      +'<div class="o">'+esc(l.icp)+' · '+esc(l.svc)+(l.cty?' · '+esc(l.cty):'')+'</div>'
+      +'<div class="o">Signal: '+esc(l.sig||"none verified")+(l.src?' ('+esc(l.src)+')':'')+'</div>'
+      +(l.next?'<div class="o">Next: '+esc(l.next)+'</div>':'')
+      +'<div class="row"><div><label class="f" for="st'+l.id+'">Stage</label><select id="st'+l.id+'" data-id="'+l.id+'" class="stSel">'+opts+'</select></div>'
+      +'<div><label class="f" for="fd'+l.id+'">Follow-up</label><input type="date" id="fd'+l.id+'" data-id="'+l.id+'" class="fdIn" value="'+esc(l.fu||"")+'"></div>'
+      +'<div style="flex:none;min-width:0"><button class="b danger delBtn" data-id="'+l.id+'">Delete</button></div></div></div>'
+  });
+  $("leadList").innerHTML=h||'<p class="sub">No leads yet.</p>';
+  $("lcount").textContent="· "+leads.length+" total, "+dueList().length+" due";
+  var s=document.querySelectorAll(".stSel"),i;
+  for(i=0;i<s.length;i++)s[i].onchange=function(){var l=find(this.getAttribute("data-id"));if(!l)return;l.stage=this.value;l.last=today();
+    if(l.stage==="Lost"){var r=prompt("Lost reason (optional)");l.lr=r||""}
+    if(l.stage==="Won"||l.stage==="Lost")l.outcome=l.stage;ls(leads);leadList();dueBox()};
+  var f=document.querySelectorAll(".fdIn");
+  for(i=0;i<f.length;i++)f[i].onchange=function(){var l=find(this.getAttribute("data-id"));if(!l)return;l.fu=this.value;ls(leads);leadList();dueBox()};
+  var d=document.querySelectorAll(".delBtn");
+  for(i=0;i<d.length;i++)d[i].onclick=function(){var id=this.getAttribute("data-id");if(confirm("Delete this lead?")){leads=leads.filter(function(l){return String(l.id)!==id});ls(leads);leadList();dueBox()}};
+}
+function find(id){for(var i=0;i<leads.length;i++)if(String(leads[i].id)===String(id))return leads[i]}
+$("addLead").onclick=function(){
+  var g=function(i){return $(i).value.trim()};
+  if(!g("l_name")&&!g("l_co")){toast("Add at least a name or company");return}
+  var id=leads.reduce(function(m,l){return Math.max(m,l.id)},0)+1;
+  leads.push({id:id,added:today(),name:g("l_name"),url:g("l_url"),co:g("l_co"),site:g("l_site"),title:g("l_title"),cty:g("l_cty"),icp:$("l_icp").value,svc:$("l_svc").value,sig:g("l_sig"),src:g("l_src"),score:g("l_score"),stage:"Qualified",next:g("l_next"),fu:g("l_fu"),val:g("l_val"),note:g("l_note"),last:"",lr:"",outcome:""});
+  ls(leads);
+  ["l_name","l_url","l_co","l_site","l_title","l_cty","l_sig","l_src","l_score","l_val","l_next","l_fu","l_note"].forEach(function(i){$(i).value=""});
+  leadList();dueBox();toast("Lead saved")
+};
+$("csvBtn").onclick=function(){
+  var q=function(s){return '"'+String(s==null?"":s).replace(/"/g,'""')+'"'};
+  var head=["Lead ID","Date Added","Name","LinkedIn URL","Company","Website","Job Title","Country","ICP","Service Line","Buying Signal","Evidence Source","Lead Score","Pipeline Stage","Last Contact Date","Last Interaction","Response","Estimated Deal Value","Probability","Next Action","Follow-Up Date","Outcome","Lost Reason","Notes"];
+  var rows=[head.map(q).join(",")];
+  leads.forEach(function(l){rows.push([l.id,l.added,l.name,l.url,l.co,l.site,l.title,l.cty,l.icp,l.svc,l.sig,l.src,l.score,l.stage,l.last,"","",l.val,"",l.next,l.fu,l.outcome,l.lr,l.note].map(q).join(","))});
+  copy(rows.join("\n"))
+};
+
+/* ---------- Day / night actions ---------- */
+$("day").onchange=function(){if(this.value){cur=this.value;load()}};
+$("mSN").onclick=function(){setMode("sn")};$("mFull").onclick=function(){setMode("full")};
+$("ctxBtn").onclick=function(){var f=rec().f;
+  copy("Today is "+dl()+". Today's theme: "+(f.theme||"[THEME]")+".\nMy top three outcomes today are:\n1. "+(f.o1||"[OUTCOME 1]")+"\n2. "+(f.o2||"[OUTCOME 2]")+"\n3. "+(f.o3||"[OUTCOME 3]")+"\nI have these meetings today: "+(f.meet||"none")+".\nConfirm you understand the pipeline stages and the no-fabrication rule, then ask me for the first item: my pipeline list.")};
+$("dashBtn").onclick=function(){var r=rec(),s="Here are today's BD numbers:\n";METRICS.forEach(function(x){s+=x[1]+": "+(r.m[x[0]]||0)+"\n"});
+  s+="Tell me honestly which numbers show real movement and which only show activity. Do not praise. Identify the weakest stage in my funnel today.";copy(s)};
+$("nightBtn").onclick=function(){var r=rec(),f=r.f,v=function(k){return r.m[k]!==undefined&&r.m[k]!==""?r.m[k]:"not recorded"},x=function(k){return f[k]||"not recorded"};
+  copy("Nightly report for "+dl()+"\nResearched: "+v("res")+"  Qualified added: "+v("qual")+"  A-leads: "+v("ahi")
+  +"\nRequests sent: "+v("reqs")+"  Accepted: "+v("acc")+"  Messages sent: "+v("first")+"  Follow-ups: "+v("fu")
+  +"\nReplies: "+v("rep")+"  Positive: "+v("pos")+"  Qualified opps: "+v("opps")+"  Discovery booked: "+v("mb")+"  Held: "+v("mh")+"  Proposals: "+v("prop")+"  Won: "+v("won")+"  Pipeline value PKR: "+v("val")+"  Revenue PKR: "+v("rev")
+  +"\nBest opportunity today: "+x("bo")+"\nWhat prospects said: "+x("sd")+"\nWhich message got a reply: "+x("wm")+"\nObjection seen: "+x("ob")+"\nWhat blocked me: "+x("bk")
+  +"\nWhat moved a deal forward: "+x("a1")+"\nActivity only: "+x("a2")
+  +"\nTop 3 for tomorrow: 1) "+x("t1")+" 2) "+x("t2")+" 3) "+x("t3")
+  +"\n\nAct as my sales manager. Reply with Results, Analysis, Bottleneck, Decision (stop/start/continue), Tomorrow (exact priorities and time blocks) and one measurable commitment. Separate today from cumulative results, do not invent missing numbers, and do not call a small sample a failure.")};
+$("carry").onclick=function(){var r=rec(),nx=new Date(cur+"T12:00:00");nx.setDate(nx.getDate()+1);var k=nx.toISOString().slice(0,10);
+  if(!db[k])db[k]={done:{},doneS:{},f:{},m:{}};
+  for(var i=0;i<3;i++)db[k].f["o"+(i+1)]=r.f["t"+(i+1)]||"";
+  sv(db);toast("Top 3 saved as outcomes for "+k)};
+$("exportBtn").onclick=function(){var ks=Object.keys(db).sort().slice(-7),s="Week summary (day: blocks, requests, contacts, replies, meetings held, proposals)\n";
+  ks.forEach(function(k){var r=db[k],n=nums(r),d=0,dd=mode==="sn"?(r.doneS||{}):(r.done||{});for(var i in dd)if(dd[i])d++;s+=k+": "+d+"/"+B().length+", "+n.reqs+", "+(n.first+n.fu)+", "+n.rep+", "+n.mh+", "+n.prop+"\n"});copy(s)};
+function tab(n){
+  $("pDay").className=n==="d"?"":"hide";$("pNight").className=n==="n"?"":"hide";$("pLeads").className=n==="l"?"":"hide";
+  $("tabDay").setAttribute("aria-selected",n==="d");$("tabNight").setAttribute("aria-selected",n==="n");$("tabLeads").setAttribute("aria-selected",n==="l");window.scrollTo(0,0)}
+$("tabDay").onclick=function(){tab("d")};$("tabNight").onclick=function(){tab("n")};$("tabLeads").onclick=function(){tab("l")};
+$("due").onclick=function(){tab("l")};
+cur=today();build();
+$("mSN").setAttribute("aria-pressed",mode==="sn");$("mFull").setAttribute("aria-pressed",mode!=="sn");
+load();
+if(new Date().getHours()>=17)tab("n");
+setInterval(paint,60000);
+</script>
+</body>
+</html>
